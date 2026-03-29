@@ -5,8 +5,6 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const use_system_zlib = b.option(bool, "use_system_zlib", "Use system zlib") orelse false;
-    const enable_brotli = b.option(bool, "enable_brotli", "Build Brotli") orelse true;
-
     const lib = b.addStaticLibrary(.{
         .name = "freetype",
         .target = target,
@@ -18,14 +16,6 @@ pub fn build(b: *std.Build) void {
 
     if (use_system_zlib) {
         lib.root_module.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
-    }
-
-    if (enable_brotli) {
-        lib.root_module.addCMacro("FT_CONFIG_OPTION_USE_BROTLI", "1");
-        if (b.lazyDependency("brotli", .{
-            .target = target,
-            .optimize = optimize,
-        })) |dep| lib.linkLibrary(dep.artifact("brotli"));
     }
 
     lib.root_module.addCMacro("HAVE_UNISTD_H", "1");

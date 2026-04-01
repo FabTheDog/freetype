@@ -6,7 +6,7 @@ _Looking for Zig bindings to Freetype?_ See [mach/freetype](https://github.com/h
 
 ## Updating
 
-To update this repository, run `./update.sh` followed by `./verify.sh` to verify the repository contents.
+To update this repository to the latest upstream version, run `./update.sh`.
 
 ## Verifying repository contents
 

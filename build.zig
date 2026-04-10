@@ -5,22 +5,27 @@ pub fn build(b: *std.Build) void {
     const optimize = b.standardOptimizeOption(.{});
 
     const use_system_zlib = b.option(bool, "use_system_zlib", "Use system zlib") orelse false;
-    const lib = b.addStaticLibrary(.{
-        .name = "freetype",
+
+    const mod = b.createModule(.{
         .target = target,
         .optimize = optimize,
+        .link_libc = true,
     });
-    lib.linkLibC();
-    lib.addIncludePath(b.path("include"));
-    lib.root_module.addCMacro("FT2_BUILD_LIBRARY", "1");
+
+    const lib = b.addLibrary(.{
+        .name = "freetype",
+        .root_module = mod,
+    });
+    mod.addIncludePath(b.path("include"));
+    mod.addCMacro("FT2_BUILD_LIBRARY", "1");
 
     if (use_system_zlib) {
-        lib.root_module.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
+        mod.addCMacro("FT_CONFIG_OPTION_SYSTEM_ZLIB", "1");
     }
 
-    lib.root_module.addCMacro("HAVE_UNISTD_H", "1");
-    lib.addCSourceFiles(.{ .files = &sources, .flags = &.{} });
-    if (target.result.os.tag == .macos) lib.addCSourceFile(.{
+    mod.addCMacro("HAVE_UNISTD_H", "1");
+    mod.addCSourceFiles(.{ .files = &sources, .flags = &.{} });
+    if (target.result.os.tag == .macos) mod.addCSourceFile(.{
         .file = b.path("src/base/ftmac.c"),
         .flags = &.{},
     });

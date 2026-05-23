@@ -29,6 +29,21 @@ pub fn build(b: *std.Build) void {
         .file = b.path("src/base/ftmac.c"),
         .flags = &.{},
     });
+
+    // iOS targets require the iOS SDK sysroot (libc headers are not bundled
+    // with Zig). Pull the headers, frameworks, and stub libs from the bundled
+    // `xcode_frameworks` package so the C sources can find <string.h> etc.
+    if (target.result.os.tag == .ios) {
+        if (b.lazyDependency("xcode_frameworks", .{
+            .target = target,
+            .optimize = optimize,
+        })) |dep| {
+            const subdir = if (target.result.abi == .simulator) "iphonesimulator" else "iphoneos";
+            mod.addSystemFrameworkPath(dep.path(b.fmt("{s}/Frameworks", .{subdir})));
+            mod.addSystemIncludePath(dep.path(b.fmt("{s}/include", .{subdir})));
+            mod.addLibraryPath(dep.path(b.fmt("{s}/lib", .{subdir})));
+        }
+    }
     lib.installHeadersDirectory(b.path("include/freetype"), "freetype", .{});
     lib.installHeader(b.path("include/ft2build.h"), "ft2build.h");
     b.installArtifact(lib);
